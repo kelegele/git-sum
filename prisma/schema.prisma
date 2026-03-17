@@ -1,0 +1,41 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model UserConfig {
+  id                    String    @id @default(uuid())
+  githubUsername        String    @map("github_username")
+  githubToken           String?   @map("github_token")
+  flomoWebhookUrl       String    @map("flomo_webhook_url")
+  flomoDefaultTags      String?   @map("flomo_default_tags")
+  timezone              String    @default("Asia/Shanghai")
+  isActive              Boolean   @default(true) @map("is_active")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  pushRecords           PushRecord[]
+
+  @@map("user_configs")
+}
+
+model PushRecord {
+  id                    String    @id @default(uuid())
+  userId                String    @map("user_id")
+  date                  DateTime  @db.Date
+  content               String    @db.Text
+  tags                  String[]
+  status                String    @default("pending")
+  errorMessage          String?   @map("error_message")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  user                  UserConfig @relation(fields: [userId], references: [id])
+
+  @@map("push_records")
+  @@unique([userId, date], name: "userId_date")
+}
